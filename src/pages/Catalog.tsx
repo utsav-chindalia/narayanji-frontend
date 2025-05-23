@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import Header from '@/components/Header';
@@ -174,12 +173,6 @@ const Catalog = () => {
               {category}
             </Button>
           ))}
-        </div>
-
-        {/* Deal of the Day */}
-        <div className="bg-gradient-to-r from-brand-red to-brand-red-light text-white rounded-lg p-4 mb-6">
-          <h2 className="text-xl font-bold">Deal of the Day - 35% OFF</h2>
-          <p className="text-sm mt-1 opacity-90">View coupon details</p>
         </div>
 
         {/* Products Grid */}

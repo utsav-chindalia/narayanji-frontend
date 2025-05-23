@@ -21,7 +21,7 @@ const CartToast = ({ visible, itemCount, totalPrice, onClose }: CartToastProps) 
       const timer = setTimeout(() => {
         setIsVisible(false);
         onClose();
-      }, 5000);
+      }, 5000); // Changed from 5000 to 5000 milliseconds (5 seconds)
       
       return () => clearTimeout(timer);
     }

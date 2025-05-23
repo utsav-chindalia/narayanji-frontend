@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trash2 } from 'lucide-react';
@@ -193,6 +194,7 @@ const Cart = () => {
             </Button>
           </div>
         </div>
+        <BottomNav cartItemCount={0} />
       </div>
     );
   }
