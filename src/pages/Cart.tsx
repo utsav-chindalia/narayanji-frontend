@@ -7,12 +7,23 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 
-interface CartProduct {
+// Define missing types
+interface Product {
   sku: string;
   name: string;
+  category: string;
   price_per_kg: number;
-  quantity_kg: number;
   gst_percent: number;
+}
+
+interface CartItem {
+  sku: string;
+  quantity_kg: number;
+}
+
+interface CartItemWithProduct extends CartItem {
+  product: Product;
+  total: number;
 }
 
 const Cart = () => {
