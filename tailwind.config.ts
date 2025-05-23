@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,24 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Brand colors for Narayanji
+				cream: {
+					50: '#FEFDFB',
+					100: '#F8F4E3',
+					200: '#F1E8C5',
+					300: '#EADCA7',
+					400: '#E3D089',
+					500: '#DCC46B',
+					600: '#B09D56',
+					700: '#847541',
+					800: '#584E2C',
+					900: '#2C2716'
+				},
+				brand: {
+					red: '#D22630',
+					'red-light': '#E55560',
+					'red-dark': '#A01E26'
 				}
 			},
 			borderRadius: {
@@ -84,11 +103,22 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'slide-up': {
+					from: {
+						transform: 'translateY(100%)',
+						opacity: '0'
+					},
+					to: {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'slide-up': 'slide-up 0.3s ease-out'
 			}
 		}
 	},
