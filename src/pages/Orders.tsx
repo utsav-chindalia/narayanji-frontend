@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 
 interface Order {
@@ -67,7 +67,7 @@ const Orders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50 pb-16">
       <Header />
       
       <div className="px-4 py-6">
@@ -145,6 +145,8 @@ const Orders = () => {
           </div>
         )}
       </div>
+      
+      <BottomNav />
     </div>
   );
 };

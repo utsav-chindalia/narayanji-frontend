@@ -5,6 +5,8 @@ import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import BottomNav from '@/components/BottomNav';
+import CartToast from '@/components/CartToast';
 
 interface Product {
   sku: string;
@@ -61,6 +63,9 @@ const Catalog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [showCartToast, setShowCartToast] = useState(false);
+  const [cartTotal, setCartTotal] = useState(0);
+  const [distributorName, setDistributorName] = useState("Raj Distributors");
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -70,7 +75,28 @@ const Catalog = () => {
     if (savedCart) {
       setCart(JSON.parse(savedCart));
     }
+    
+    // Load distributor name - in a real app, this would come from auth data
+    const savedName = localStorage.getItem('narayanji_distributor_name');
+    if (savedName) {
+      setDistributorName(savedName);
+    } else {
+      // For demo purposes, save a default name
+      localStorage.setItem('narayanji_distributor_name', distributorName);
+    }
   }, []);
+
+  useEffect(() => {
+    // Calculate cart total
+    let total = 0;
+    cart.forEach(item => {
+      const product = products.find(p => p.sku === item.sku);
+      if (product) {
+        total += product.price_per_kg * item.quantity_kg;
+      }
+    });
+    setCartTotal(total);
+  }, [cart, products]);
 
   useEffect(() => {
     // Filter products based on search and category
@@ -79,6 +105,7 @@ const Catalog = () => {
     if (searchTerm) {
       filtered = filtered.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -103,15 +130,22 @@ const Catalog = () => {
 
     setCart(newCart);
     localStorage.setItem('narayanji_cart', JSON.stringify(newCart));
+    setShowCartToast(true);
   };
 
   const cartItemCount = cart.reduce((total, item) => total + 1, 0);
 
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50 pb-16">
       <Header cartItemCount={cartItemCount} />
       
       <div className="px-4 py-6">
+        {/* Welcome Message */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Welcome, {distributorName}</h1>
+          <p className="text-gray-600">Browse our latest products</p>
+        </div>
+      
         {/* Search */}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -154,7 +188,8 @@ const Catalog = () => {
             {selectedCategory === 'All' ? 'All Products' : selectedCategory}
           </h3>
           
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {/* Single column in mobile view */}
+          <div className="grid grid-cols-1 gap-4">
             {filteredProducts.map(product => (
               <ProductCard
                 key={product.sku}
@@ -171,6 +206,15 @@ const Catalog = () => {
           )}
         </div>
       </div>
+      
+      <BottomNav cartItemCount={cartItemCount} />
+      
+      <CartToast 
+        visible={showCartToast} 
+        itemCount={cartItemCount} 
+        totalPrice={cartTotal}
+        onClose={() => setShowCartToast(false)}
+      />
     </div>
   );
 };

@@ -1,27 +1,18 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 
-interface Product {
+interface CartProduct {
   sku: string;
   name: string;
-  category: string;
   price_per_kg: number;
-  gst_percent: number;
-}
-
-interface CartItem {
-  sku: string;
   quantity_kg: number;
-}
-
-interface CartItemWithProduct extends CartItem {
-  product: Product;
-  total: number;
+  gst_percent: number;
 }
 
 const Cart = () => {
@@ -174,7 +165,7 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-cream-50">
+      <div className="min-h-screen bg-cream-50 pb-16">
         <Header cartItemCount={0} />
         <div className="px-4 py-8 text-center">
           <div className="max-w-md mx-auto">
@@ -196,7 +187,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50 pb-16">
       <Header cartItemCount={cartItems.length} />
       
       <div className="px-4 py-6">
@@ -272,6 +263,8 @@ const Cart = () => {
           </Button>
         </div>
       </div>
+      
+      <BottomNav cartItemCount={cartItems.length} />
     </div>
   );
 };

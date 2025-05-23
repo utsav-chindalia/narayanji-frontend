@@ -1,7 +1,7 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 
 interface TrackingStatus {
   status: string;
@@ -23,7 +23,7 @@ const Tracking = () => {
   const currentStatus = trackingStatuses.find(s => s.current);
 
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50 pb-16">
       <Header />
       
       <div className="px-4 py-6">
@@ -103,6 +103,8 @@ const Tracking = () => {
           </div>
         </div>
       </div>
+      
+      <BottomNav />
     </div>
   );
 };

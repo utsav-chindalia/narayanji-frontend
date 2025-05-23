@@ -1,7 +1,7 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 
 interface OrderItem {
@@ -69,7 +69,7 @@ const OrderDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50 pb-16">
       <Header />
       
       <div className="px-4 py-6">
@@ -147,6 +147,8 @@ const OrderDetails = () => {
           </Link>
         )}
       </div>
+      
+      <BottomNav />
     </div>
   );
 };

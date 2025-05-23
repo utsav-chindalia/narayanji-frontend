@@ -2,6 +2,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCartIcon, MenuIcon } from 'lucide-react';
 import { useState } from 'react';
+import narayanjiLogo from '@/assets/narayanji-logo.png';
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -23,10 +24,11 @@ const Header = ({ cartItemCount = 0 }: HeaderProps) => {
       <header className="sticky top-0 bg-white shadow-sm z-50">
         <div className="px-4 py-3 flex justify-between items-center">
           <Link to="/catalog" className="flex items-center">
-            <div className="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <span className="font-bold text-lg text-gray-900">Narayanji</span>
+            <img 
+              src={narayanjiLogo} 
+              alt="Narayanji Gajak" 
+              className="h-10 mr-2" 
+            />
           </Link>
           
           <div className="flex items-center gap-4">
