@@ -133,30 +133,45 @@ const Cart = () => {
     return calculateSubtotal() + calculateGST();
   };
 
-  const handleProceedToPayment = async () => {
+  const handleSendForReview = async () => {
     if (cartItems.length === 0) {
       toast({
         title: "Empty Cart",
-        description: "Please add items to your cart before proceeding",
+        description: "Please add items to your cart before sending for review",
         variant: "destructive"
       });
       return;
     }
     setIsLoading(true);
-    // Simulate order creation
-    setTimeout(() => {
-      const orderId = `ORD-${Date.now()}`;
+    try {
+      const response = await apiFetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: cartItems.map(item => ({ sku: item.sku, quantity_kg: item.quantity_kg }))
+        })
+      });
+      if (!response.ok) throw new Error('Failed to send order for review');
       // Clear cart
       setCart([]);
       setCartItems([]);
       localStorage.removeItem('narayanji_cart');
-      setIsLoading(false);
       toast({
-        title: "Order Placed Successfully",
-        description: `Order ${orderId} has been created`,
+        title: "Order Sent for Review",
+        description: `Your order has been sent for admin review.`,
       });
       navigate('/orders');
-    }, 2000);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to send order for review',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (loadingProducts) {
@@ -205,7 +220,7 @@ const Cart = () => {
             <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-gray-400 text-3xl">🛒</span>
             </div>
-            <h2 className="text-xl font-semibold mb-2">Your Cart is Empty</h2>
+            <h2 className="text-xl font-semibold mb-2">No products in your cart.</h2>
             <p className="text-gray-600 mb-6">Add some delicious gajak to get started!</p>
             <Button 
               onClick={() => navigate('/catalog')}
@@ -282,11 +297,11 @@ const Cart = () => {
             </div>
           </div>
           <Button 
-            onClick={handleProceedToPayment}
+            onClick={handleSendForReview}
             disabled={isLoading}
             className="w-full btn-primary"
           >
-            {isLoading ? "Processing..." : "Proceed to Payment"}
+            {isLoading ? "Processing..." : "Send for Review"}
           </Button>
         </div>
       </div>
