@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
@@ -38,34 +38,39 @@ const Catalog = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch products from backend
+  // Fetch products from backend (infinite scroll version)
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
+      if (page === 1) setLoading(true);
+      else setLoadingMore(true);
       setError(null);
       try {
         const response = await apiFetch(`/api/catalog?page=${page}&pageSize=${PAGE_SIZE}`);
         if (!response.ok) throw new Error('Failed to fetch products');
         const data = await response.json();
-        // If backend returns { products: [], total: number }
         if (Array.isArray(data)) {
-          setProducts(data);
-          setTotalProducts(null); // No total info
+          setProducts(prev => page === 1 ? data : [...prev, ...data]);
+          setTotalProducts(null);
         } else if (data.products && Array.isArray(data.products)) {
-          setProducts(data.products);
+          setProducts(prev => page === 1 ? data.products : [...prev, ...data.products]);
           setTotalProducts(data.total || null);
         } else {
-          setProducts([]);
+          if (page === 1) setProducts([]);
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');
-        setProducts([]);
+        if (page === 1) setProducts([]);
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     };
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   // Load cart and distributor name from localStorage
@@ -110,6 +115,26 @@ const Catalog = () => {
     setFilteredProducts(filtered);
   }, [searchTerm, selectedCategory, products]);
 
+  // Infinite scroll observer
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (
+      target.isIntersecting &&
+      !loadingMore &&
+      !loading &&
+      (totalProducts === null || products.length < totalProducts)
+    ) {
+      setPage(prev => prev + 1);
+    }
+  }, [loadingMore, loading, products.length, totalProducts]);
+
+  useEffect(() => {
+    if (observer.current) observer.current.disconnect();
+    observer.current = new window.IntersectionObserver(handleObserver);
+    if (loadMoreRef.current) observer.current.observe(loadMoreRef.current);
+    return () => observer.current && observer.current.disconnect();
+  }, [handleObserver, filteredProducts]);
+
   const handleAddToCart = (sku: string, quantity: number) => {
     const existingItemIndex = cart.findIndex(item => item.sku === sku);
     let newCart: CartItem[];
@@ -128,10 +153,6 @@ const Catalog = () => {
 
   // Get unique categories from products
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
-
-  // Pagination controls
-  const handlePrevPage = () => setPage(p => Math.max(1, p - 1));
-  const handleNextPage = () => setPage(p => p + 1);
 
   return (
     <div className="min-h-screen bg-cream-50 pb-16">
@@ -199,18 +220,17 @@ const Catalog = () => {
                   <p>No products found matching your criteria.</p>
                 </div>
               )}
+              {/* Infinite Scroll Trigger */}
+              <div ref={loadMoreRef} style={{ height: 1 }} />
+              {loadingMore && (
+                <div className="text-center py-4 text-gray-500">Loading more...</div>
+              )}
+              {/* End of List Message */}
+              {totalProducts !== null && products.length >= totalProducts && !loadingMore && (
+                <div className="text-center py-4 text-gray-400">No more products to load.</div>
+              )}
             </>
           )}
-        </div>
-        {/* Pagination Controls */}
-        <div className="flex justify-center gap-4 mb-4">
-          <Button onClick={handlePrevPage} disabled={page === 1 || loading}>
-            Previous
-          </Button>
-          <span className="self-center">Page {page}</span>
-          <Button onClick={handleNextPage} disabled={loading || (totalProducts !== null && products.length < PAGE_SIZE)}>
-            Next
-          </Button>
         </div>
       </div>
       <BottomNav cartItemCount={cartItemCount} />
