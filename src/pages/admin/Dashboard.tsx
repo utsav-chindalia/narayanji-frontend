@@ -1,6 +1,7 @@
-
 import { Activity, DollarSign, Package, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 const Dashboard = () => {
   // Sample data for demonstration
@@ -31,13 +32,33 @@ const Dashboard = () => {
     },
   ];
 
-  const recentOrders = [
-    { id: "ORD-7352", distributor: "Raj Distributors", date: "2023-05-22", amount: "₹12,430", status: "Delivered" },
-    { id: "ORD-7351", distributor: "Shyam Traders", date: "2023-05-22", amount: "₹8,790", status: "Processing" },
-    { id: "ORD-7350", distributor: "Ganesh Store", date: "2023-05-21", amount: "₹6,200", status: "Pending" },
-    { id: "ORD-7349", distributor: "Krishna Sweets", date: "2023-05-20", amount: "₹15,400", status: "Delivered" },
-    { id: "ORD-7348", distributor: "Laxmi Foods", date: "2023-05-20", amount: "₹7,250", status: "Delivered" },
-  ];
+  // State for recent orders
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setOrdersLoading(true);
+      setOrdersError(null);
+      try {
+        const res = await apiFetch('/api/orders');
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const data = await res.json();
+        // Sort by created_at desc, take 5 most recent
+        const sorted = Array.isArray(data)
+          ? data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5)
+          : [];
+        setRecentOrders(sorted);
+      } catch (err: any) {
+        setOrdersError(err.message || 'Failed to fetch orders');
+        setRecentOrders([]);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -63,60 +84,56 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div>
         <Card>
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-3 text-left">Order ID</th>
-                    <th className="py-3 text-left">Distributor</th>
-                    <th className="py-3 text-left">Amount</th>
-                    <th className="py-3 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order.id} className="border-b last:border-0">
-                      <td className="py-3">{order.id}</td>
-                      <td className="py-3">{order.distributor}</td>
-                      <td className="py-3">{order.amount}</td>
-                      <td className="py-3">
-                        <span
-                          className={`inline-block rounded-full px-2 py-1 text-xs ${
-                            order.status === 'Delivered'
-                              ? 'bg-green-100 text-green-800'
-                              : order.status === 'Processing'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
+              {ordersLoading ? (
+                <div className="py-8 text-center text-gray-500">Loading recent orders...</div>
+              ) : ordersError ? (
+                <div className="py-8 text-center text-red-500">{ordersError}</div>
+              ) : recentOrders.length === 0 ? (
+                <div className="py-8 text-center text-gray-500">No recent orders found.</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-3 text-left">Order ID</th>
+                      <th className="py-3 text-left">Distributor</th>
+                      <th className="py-3 text-left">Date</th>
+                      <th className="py-3 text-left">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="flex h-[300px] items-center justify-center">
-            <div className="flex flex-col items-center text-center">
-              <TrendingUp className="h-16 w-16 text-gray-300 mb-2" />
-              <h3 className="text-lg font-medium">Sales Chart Placeholder</h3>
-              <p className="text-sm text-gray-500">
-                In a real application, a chart would be displayed here.
-              </p>
+                  </thead>
+                  <tbody>
+                    {recentOrders.map((order) => (
+                      <tr key={order.id} className="border-b last:border-0">
+                        <td className="py-3">{order.id}</td>
+                        {/* TODO: Replace vendor_id with distributor name when available */}
+                        <td className="py-3">{order.vendor_id || order.vendorId || <span className="italic text-gray-400">Unknown</span>}</td>
+                        <td className="py-3">{order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}</td>
+                        <td className="py-3">
+                          <span
+                            className={`inline-block rounded-full px-2 py-1 text-xs ${
+                              order.status === 'paid' || order.status === 'delivered'
+                                ? 'bg-green-100 text-green-800'
+                                : order.status === 'processing'
+                                ? 'bg-blue-100 text-blue-800'
+                                : order.status === 'cart' || order.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </CardContent>
         </Card>
