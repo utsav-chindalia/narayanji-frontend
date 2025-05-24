@@ -1,0 +1,39 @@
+# High-Level Folder Summary
+
+## Top-Level Folders
+
+- **narayanji-gajak-b2b/**
+  - The main project directory containing all source code, configuration, documentation, and assets.
+
+## Inside `narayanji-gajak-b2b/`
+
+- **highlevel_docs/**
+  - Presumably contains documentation or high-level project notes.
+
+- **src/**
+  - The main source code for the frontend application.
+  - Contains subfolders for:
+    - `assets/`: Static assets like images, fonts, etc.
+    - `components/`: Reusable UI components (with a `ui/` subfolder).
+    - `hooks/`: Custom React hooks.
+    - `layouts/`: Layout components for structuring pages.
+    - `lib/`: Utility libraries or helper functions.
+    - `pages/`: Page components, including an `admin/` subfolder for admin-specific pages.
+
+- **public/**
+  - Static files served directly, such as `favicon.ico`, `robots.txt`, and a `lovable-uploads/` folder for uploaded files.
+
+- **node_modules/**
+  - Standard folder for installed npm dependencies (auto-generated).
+
+- **.git/**
+  - Git version control metadata.
+
+- **.cursor/**
+  - Likely related to the development environment or editor.
+
+## Other Notable Files
+
+- Configuration files for TypeScript, Vite, Tailwind, PostCSS, ESLint, etc.
+- `README.md`: Project overview and instructions.
+- `index.html`: Main HTML entry point. 

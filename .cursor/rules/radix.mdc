@@ -1,0 +1,25 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Radix UI Best Practices
+
+## Accessibility First
+- Rule: Use Radix only for behavior (e.g., dropdown, modal) – you must style it yourself for accessibility.
+- Rule: Always pass `asChild` if wrapping with custom components to preserve semantics.
+
+## Composability
+- Rule: Treat Radix components like headless UI. Compose them with your design system – don’t override behavior.
+- Rule: Use slot-like behavior (`<Component asChild>`) to wrap in custom tags (like `Link` or `button`) cleanly.
+
+## Integration
+- Rule: Test keyboard and screen reader behavior in all Radix components.
+- Rule: Namespace your overrides or classNames (e.g., `dropdown__trigger`, `tooltip__content`) to avoid style conflicts.
+
+## Customization
+- Rule: Never directly style Radix primitives with `styled-components` or CSS – use `className` + Tailwind only.
+- Rule: For animation and transitions, prefer `@radix-ui/react-*` transition hooks where available or wrap with `framer-motion`.
+
+---
+

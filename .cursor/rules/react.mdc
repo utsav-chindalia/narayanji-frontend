@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# React Best Practices
+
+## Component Structure & Architecture
+- Rule: Each component must do one thing only. Break down multi-responsibility components into smaller composables.
+- Rule: Group components by feature, not type (`/features/profile/Avatar.tsx`, not `/components/Avatar.tsx`).
+- Rule: Use compound components for complex UIs (e.g., `<Tabs><Tabs.Trigger /></Tabs>` pattern).
+
+## Hooks & State
+- Rule: Use `useState` for local UI state, `useReducer` for complex or interrelated state updates.
+- Rule: Never fetch data directly inside components. Use custom hooks like `useUser()` that encapsulate logic.
+- Rule: Always clean up effects. Add `return () => cleanup()` in `useEffect`.
+
+## JSX & Rendering
+- Rule: Avoid conditional rendering chains in JSX. Extract logic outside JSX or use early returns.
+- Rule: Memoize pure child components with `React.memo()` if they render frequently with unchanged props.
+- Rule: Use key prop with stable identifiers (not index) in lists.
+
+## Performance & Dev Tools
+- Rule: Profile with React DevTools before optimizing. Use `useMemo` and `useCallback` only when profiling shows need.
+- Rule: Wrap context providers at feature or route level, not app root, unless global.
+
+---
+
+
+# Radix UI Best Practices
+
+## Accessibility First
+- Rule: Use Radix only for behavior (e.g., dropdown, modal) – you must style it yourself for accessibility.
+- Rule: Always pass `asChild` if wrapping with custom components to preserve semantics.
+
+## Composability
+- Rule: Treat Radix components like headless UI. Compose them with your design system – don’t override behavior.
+- Rule: Use slot-like behavior (`<Component asChild>`) to wrap in custom tags (like `Link` or `button`) cleanly.
+
+## Integration
+- Rule: Test keyboard and screen reader behavior in all Radix components.
+- Rule: Namespace your overrides or classNames (e.g., `dropdown__trigger`, `tooltip__content`) to avoid style conflicts.
+
+## Customization
+- Rule: Never directly style Radix primitives with `styled-components` or CSS – use `className` + Tailwind only.
+- Rule: For animation and transitions, prefer `@radix-ui/react-*` transition hooks where available or wrap with `framer-motion`.
+
+---
+
+# TypeScript Best Practices
+
+## Types vs Interfaces
+- Rule: Use `type` for unions and intersections; use `interface` when extending object shapes.
+- Rule: Never export raw JSON objects – define their types first and export those alongside the object.
+
+## Function Signatures
+- Rule: Always annotate return types of exported functions/components.
+- Rule: Use `zod` or `io-ts` to validate and infer types from API responses.
+
+## Strictness & Safety
+- Rule: Avoid `any`. Use `unknown` if the type is dynamic, and assert after checks.
+- Rule: Enable `strictNullChecks`, `noImplicitAny`, `exactOptionalPropertyTypes` in `tsconfig`.
+
+## Patterns
+- Rule: Avoid type widening (e.g., `const x = []` widens to `any[]`) – always initialize with explicit type.
+- Rule: Use `Record<string, Type>` for key-mapped objects instead of `{ [key: string]: Type }`.
+- Rule: Clean up legacy `.d.ts` files – use `export type` collocated near the source.
+
+## Code Ergonomics
+- Rule: Prefer discriminated unions over optional fields.
+- Rule: Infer props using `ComponentProps<typeof Component>` when wrapping base components.

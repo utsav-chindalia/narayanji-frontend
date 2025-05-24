@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '../lib/supabaseClient';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -23,16 +23,12 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsOtpSent(true);
-      toast({
-        title: "OTP Sent",
-        description: `6-digit OTP sent to +91 ${phone}`,
-      });
-    }, 1000);
+    // Bypass actual OTP sending, just show the OTP sent toast and set isOtpSent
+    setIsOtpSent(true);
+    toast({
+      title: "OTP Sent",
+      description: `6-digit OTP sent to +91 ${phone}`,
+    });
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -61,17 +57,48 @@ const Login = () => {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // For development, only allow the dummy OTP
+      if (otpString !== '123456') {
+        setIsLoading(false);
+        toast({
+          title: "OTP Verification Failed",
+          description: 'Invalid OTP',
+          variant: "destructive"
+        });
+        return;
+      }
+      // Call supabase verifyOtp with the dummy OTP
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: `${phone}`,
+        token: '123456',
+        type: 'sms',
+      });
       setIsLoading(false);
-      localStorage.setItem('narayanji_auth', 'true');
+      if (error || !data.session) {
+        toast({
+          title: "OTP Verification Failed",
+          description: error?.message || 'Invalid OTP',
+          variant: "destructive"
+        });
+        return;
+      }
+      // Save JWT token
+      localStorage.setItem('narayanji_auth', data.session.access_token);
       localStorage.setItem('narayanji_phone', phone);
       toast({
         title: "Login Successful",
         description: "Welcome to Narayanji Gajak",
       });
       navigate('/catalog');
-    }, 1000);
+    } catch (err: any) {
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: err.message || 'Something went wrong',
+        variant: "destructive"
+      });
+    }
   };
 
   return (

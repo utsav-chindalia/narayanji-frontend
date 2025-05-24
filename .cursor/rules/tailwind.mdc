@@ -1,0 +1,24 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# TailwindCSS Best Practices
+
+## Consistency & Readability
+- Rule: Never inline more than 5 Tailwind classes. Extract to a `clsx` or `cn()` utility or classNames helper.
+- Rule: Prefer semantic classnames using `@apply` in `.module.css` or `tailwind-variants` for repeated UI elements.
+- Rule: Group Tailwind classes by box model → layout → visual (e.g., `p-4 flex items-center bg-white shadow`).
+
+## Responsiveness & Variants
+- Rule: Always define at least one responsive breakpoint for layout-changing elements.
+- Rule: Use utility-first mindset – don’t create custom CSS unless you hit a hard limitation.
+- Rule: Prefer `hover:bg-brand` over `hover:bg-[#ffcc00]` – never hardcode hex unless in config.
+
+## Scaling & Maintenance
+- Rule: Extract complex variants using `tailwind-variants` or similar libraries.
+- Rule: Use shared design tokens in Tailwind config (`theme.extend.colors`) – don’t repeat color values.
+- Rule: Ensure all utilities used in production are included in `safelist` when using purge/just-in-time mode.
+
+---
+

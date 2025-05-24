@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# TypeScript Best Practices
+
+## Types vs Interfaces
+- Rule: Use `type` for unions and intersections; use `interface` when extending object shapes.
+- Rule: Never export raw JSON objects – define their types first and export those alongside the object.
+
+## Function Signatures
+- Rule: Always annotate return types of exported functions/components.
+- Rule: Use `zod` or `io-ts` to validate and infer types from API responses.
+
+## Strictness & Safety
+- Rule: Avoid `any`. Use `unknown` if the type is dynamic, and assert after checks.
+- Rule: Enable `strictNullChecks`, `noImplicitAny`, `exactOptionalPropertyTypes` in `tsconfig`.
+
+## Patterns
+- Rule: Avoid type widening (e.g., `const x = []` widens to `any[]`) – always initialize with explicit type.
+- Rule: Use `Record<string, Type>` for key-mapped objects instead of `{ [key: string]: Type }`.
+- Rule: Clean up legacy `.d.ts` files – use `export type` collocated near the source.
+
+## Code Ergonomics
+- Rule: Prefer discriminated unions over optional fields.
+- Rule: Infer props using `ComponentProps<typeof Component>` when wrapping base components.
