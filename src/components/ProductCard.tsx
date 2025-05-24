@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import narayanjiLogo from '@/assets/narayanji-logo.png';
 
 interface Product {
   sku: string;
@@ -51,15 +51,11 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row">
         <div className="h-40 md:h-full md:w-1/3 bg-gray-100 flex items-center justify-center relative">
-          {product.image_url ? (
-            <img 
-              src={product.image_url} 
-              alt={product.name} 
-              className="max-h-full max-w-full object-contain"
-            />
-          ) : (
-            <div className="text-gray-400 text-sm">No image</div>
-          )}
+          <img 
+            src={product.image_url ? product.image_url : narayanjiLogo} 
+            alt={product.name} 
+            className="max-h-full max-w-full object-contain"
+          />
           
           {product.is_popular && (
             <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">

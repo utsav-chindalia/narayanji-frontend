@@ -33,7 +33,7 @@ const Catalog = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [showCartToast, setShowCartToast] = useState(false);
   const [cartTotal, setCartTotal] = useState(0);
-  const [distributorName, setDistributorName] = useState("Raj Distributors");
+  const [distributorName, setDistributorName] = useState("HONEY MONEY TOP");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -208,6 +208,7 @@ const Catalog = () => {
                     key={product.sku}
                     product={{
                       ...product,
+                      image_url: product.imageUrl,
                       price_per_kg: product.pricePerKg,
                       gst_percent: product.gstPercent
                     }}

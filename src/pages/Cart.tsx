@@ -41,11 +41,17 @@ const Cart = () => {
   // Load cart from localStorage and fetch product details
   useEffect(() => {
     const fetchCartProducts = async () => {
-      setLoadingProducts(true);
       setError(null);
       const savedCart = localStorage.getItem('narayanji_cart');
       if (savedCart) {
         const cartData: CartItem[] = JSON.parse(savedCart);
+        if (cartData.length === 0) {
+          setCart([]);
+          setCartItems([]);
+          setLoadingProducts(false);
+          return;
+        }
+        setLoadingProducts(true);
         setCart(cartData);
         try {
           // Fetch product details for each SKU in the cart
@@ -80,6 +86,7 @@ const Cart = () => {
       } else {
         setCart([]);
         setCartItems([]);
+        setLoadingProducts(false);
       }
     };
     fetchCartProducts();
