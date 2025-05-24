@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '@/lib/api';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
+import { toast } from '@/components/ui/use-toast';
 
 interface Order {
   id: string;
@@ -28,6 +30,13 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [orderItemsLoading, setOrderItemsLoading] = useState(false);
+  const [orderItemsError, setOrderItemsError] = useState<string | null>(null);
+  const [approvedQuantities, setApprovedQuantities] = useState<{ [sku: string]: number | '' }>({});
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -74,6 +83,73 @@ const Orders = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const openDrawer = async (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setDrawerOpen(true);
+    setOrderItemsLoading(true);
+    setOrderItemsError(null);
+    setOrderItems([]);
+    setApprovedQuantities({});
+    try {
+      const res = await apiFetch(`/api/orders/${orderId}/items`);
+      if (!res.ok) throw new Error('Failed to fetch order items');
+      const data = await res.json();
+      setOrderItems(data);
+      // Initialize approved quantities with current approved or requested quantity
+      const initial: { [sku: string]: number | '' } = {};
+      data.forEach((item: any) => {
+        initial[item.sku] = item.approved_quantity_kg ?? item.quantity_kg ?? '';
+      });
+      setApprovedQuantities(initial);
+    } catch (err: any) {
+      setOrderItemsError(err.message || 'Failed to fetch order items');
+    } finally {
+      setOrderItemsLoading(false);
+    }
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedOrderId(null);
+    setOrderItems([]);
+    setApprovedQuantities({});
+    setOrderItemsError(null);
+  };
+
+  const handleApprove = async () => {
+    if (!selectedOrderId) return;
+    setApproving(true);
+    try {
+      const items = orderItems.map((item) => ({
+        sku: item.sku,
+        approvedQuantityKg: Number(approvedQuantities[item.sku]) || 0,
+      }));
+      // First, PUT review
+      const res = await apiFetch(`/api/orders/${selectedOrderId}/review`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+      if (!res.ok) throw new Error('Failed to approve order');
+      // Then, POST confirm
+      const confirmRes = await apiFetch(`/api/orders/${selectedOrderId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!confirmRes.ok) throw new Error('Failed to confirm order');
+      toast({ title: 'Order Approved', description: 'Order has been approved and confirmed successfully.' });
+      closeDrawer();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to approve/confirm order' });
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handleApprovedQtyChange = (sku: string, value: string) => {
+    setApprovedQuantities((prev) => ({ ...prev, [sku]: value === '' ? '' : Number(value) }));
   };
 
   return (
@@ -132,11 +208,9 @@ const Orders = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/admin/orders/${order.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
+                    <Button variant="ghost" size="sm" onClick={() => openDrawer(order.id)}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -150,6 +224,60 @@ const Orders = () => {
           </div>
         )}
       </div>
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent className="max-w-lg mx-auto w-full">
+          <DrawerHeader>
+            <DrawerTitle>Order Items</DrawerTitle>
+          </DrawerHeader>
+          {orderItemsLoading ? (
+            <div className="p-4 text-center text-gray-500">Loading items...</div>
+          ) : orderItemsError ? (
+            <div className="p-4 text-center text-red-500">{orderItemsError}</div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {orderItems.length === 0 ? (
+                <div className="text-gray-500">No items found for this order.</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left">
+                      <th className="py-1">Product</th>
+                      <th className="py-1">Qty (kg)</th>
+                      <th className="py-1">Approve Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderItems.map((item) => (
+                      <tr key={item.sku} className="border-b last:border-b-0">
+                        <td className="py-2 font-medium">{item.product_name}</td>
+                        <td className="py-2">{item.quantity_kg}</td>
+                        <td className="py-2">
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={approvedQuantities[item.sku] ?? ''}
+                            onChange={(e) => handleApprovedQtyChange(item.sku, e.target.value)}
+                            className="w-20"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+          <DrawerFooter>
+            <Button onClick={handleApprove} disabled={approving || orderItemsLoading || orderItems.length === 0}>
+              {approving ? 'Approving...' : 'Approve Order'}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

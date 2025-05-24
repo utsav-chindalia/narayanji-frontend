@@ -50,11 +50,11 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row">
-        <div className="h-40 md:h-full md:w-1/3 bg-gray-100 flex items-center justify-center relative">
+        <div className="h-40 md:h-full md:w-1/3 bg-white flex items-center justify-center relative">
           <img 
             src={product.image_url ? product.image_url : narayanjiLogo} 
             alt={product.name} 
-            className="max-h-full max-w-full object-contain"
+            className="w-32 h-32 object-contain max-h-full max-w-full"
           />
           
           {product.is_popular && (

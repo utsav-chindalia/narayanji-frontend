@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '../lib/supabaseClient';
+import narayanjiLogo from '../assets/narayanji-logo.png';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -107,9 +108,11 @@ const Login = () => {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-brand-red rounded-xl mx-auto mb-4 flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">N</span>
-            </div>
+            <img
+              src={narayanjiLogo}
+              alt="Narayanji Logo"
+              className="w-28 h-20 object-contain mx-auto mb-4"
+            />
             <h1 className="text-2xl font-bold text-gray-900">Narayanji Gajak</h1>
             <p className="text-gray-600 mt-2">Distributor Portal</p>
           </div>
