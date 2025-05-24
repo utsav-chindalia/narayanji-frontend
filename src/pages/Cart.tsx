@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trash2 } from 'lucide-react';
@@ -7,14 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import { apiFetch } from '@/lib/api';
 
 // Define missing types
 interface Product {
   sku: string;
   name: string;
   category: string;
-  price_per_kg: number;
-  gst_percent: number;
+  unitType: string;
+  imageUrl?: string | null;
+  pricePerKg: number;
+  gstPercent: number;
 }
 
 interface CartItem {
@@ -31,63 +33,56 @@ const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Mock products data
-  const products: Product[] = [
-    {
-      sku: "GJK-REG-250",
-      name: "Regular Gajak",
-      category: "Traditional",
-      price_per_kg: 450,
-      gst_percent: 5
-    },
-    {
-      sku: "GJK-SPL-250", 
-      name: "Special Gajak",
-      category: "Premium",
-      price_per_kg: 520,
-      gst_percent: 5
-    },
-    {
-      sku: "GJK-DRY-500",
-      name: "Dry Fruit Gajak", 
-      category: "Premium",
-      price_per_kg: 680,
-      gst_percent: 5
-    },
-    {
-      sku: "GJK-TIL-250",
-      name: "Til Gajak",
-      category: "Traditional", 
-      price_per_kg: 420,
-      gst_percent: 5
-    }
-  ];
-
+  // Load cart from localStorage and fetch product details
   useEffect(() => {
-    // Load cart from localStorage
-    const savedCart = localStorage.getItem('narayanji_cart');
-    if (savedCart) {
-      const cartData = JSON.parse(savedCart);
-      setCart(cartData);
-
-      // Merge cart with product data
-      const itemsWithProducts = cartData.map((item: CartItem) => {
-        const product = products.find(p => p.sku === item.sku);
-        if (product) {
-          return {
-            ...item,
-            product,
-            total: product.price_per_kg * item.quantity_kg
-          };
+    const fetchCartProducts = async () => {
+      setLoadingProducts(true);
+      setError(null);
+      const savedCart = localStorage.getItem('narayanji_cart');
+      if (savedCart) {
+        const cartData: CartItem[] = JSON.parse(savedCart);
+        setCart(cartData);
+        try {
+          // Fetch product details for each SKU in the cart
+          const productPromises = cartData.map(async (item) => {
+            const res = await apiFetch(`/api/catalog?search=${encodeURIComponent(item.sku)}`);
+            if (!res.ok) throw new Error('Failed to fetch product');
+            const data = await res.json();
+            // data could be an array or { products: [] }
+            let product: Product | undefined;
+            if (Array.isArray(data)) {
+              product = data.find((p: Product) => p.sku === item.sku);
+            } else if (data.products && Array.isArray(data.products)) {
+              product = data.products.find((p: Product) => p.sku === item.sku);
+            }
+            if (product) {
+              return {
+                ...item,
+                product,
+                total: product.pricePerKg * item.quantity_kg
+              };
+            }
+            return null;
+          });
+          const itemsWithProducts = (await Promise.all(productPromises)).filter(Boolean) as CartItemWithProduct[];
+          setCartItems(itemsWithProducts);
+        } catch (err: any) {
+          setError(err.message || 'Failed to fetch product details');
+          setCartItems([]);
+        } finally {
+          setLoadingProducts(false);
         }
-        return null;
-      }).filter(Boolean);
-
-      setCartItems(itemsWithProducts);
-    }
+      } else {
+        setCart([]);
+        setCartItems([]);
+      }
+    };
+    fetchCartProducts();
   }, []);
 
   const updateQuantity = (sku: string, quantity: number) => {
@@ -95,20 +90,17 @@ const Cart = () => {
       removeItem(sku);
       return;
     }
-
     const updatedCart = cart.map(item => 
       item.sku === sku ? { ...item, quantity_kg: quantity } : item
     );
-    
     setCart(updatedCart);
     localStorage.setItem('narayanji_cart', JSON.stringify(updatedCart));
-
     // Update cart items with new totals
     const updatedCartItems = cartItems.map(item => 
       item.sku === sku ? { 
         ...item, 
         quantity_kg: quantity,
-        total: item.product.price_per_kg * quantity 
+        total: item.product.pricePerKg * quantity 
       } : item
     );
     setCartItems(updatedCartItems);
@@ -117,11 +109,9 @@ const Cart = () => {
   const removeItem = (sku: string) => {
     const updatedCart = cart.filter(item => item.sku !== sku);
     const updatedCartItems = cartItems.filter(item => item.sku !== sku);
-    
     setCart(updatedCart);
     setCartItems(updatedCartItems);
     localStorage.setItem('narayanji_cart', JSON.stringify(updatedCart));
-    
     toast({
       title: "Item Removed",
       description: "Item has been removed from your cart",
@@ -134,7 +124,7 @@ const Cart = () => {
 
   const calculateGST = () => {
     return cartItems.reduce((total, item) => {
-      const itemGST = (item.total * item.product.gst_percent) / 100;
+      const itemGST = (item.total * item.product.gstPercent) / 100;
       return total + itemGST;
     }, 0);
   };
@@ -152,28 +142,59 @@ const Cart = () => {
       });
       return;
     }
-
     setIsLoading(true);
-    
     // Simulate order creation
     setTimeout(() => {
       const orderId = `ORD-${Date.now()}`;
-      
       // Clear cart
       setCart([]);
       setCartItems([]);
       localStorage.removeItem('narayanji_cart');
-      
       setIsLoading(false);
-      
       toast({
         title: "Order Placed Successfully",
         description: `Order ${orderId} has been created`,
       });
-      
       navigate('/orders');
     }, 2000);
   };
+
+  if (loadingProducts) {
+    return (
+      <div className="min-h-screen bg-cream-50 pb-16">
+        <Header cartItemCount={0} />
+        <div className="px-4 py-8 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-gray-400 text-3xl">🛒</span>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Loading your cart...</h2>
+            <p className="text-gray-600 mb-6">Fetching product details.</p>
+          </div>
+        </div>
+        <BottomNav cartItemCount={0} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-cream-50 pb-16">
+        <Header cartItemCount={0} />
+        <div className="px-4 py-8 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <span className="text-gray-400 text-3xl">🛒</span>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Error loading cart</h2>
+            <p className="text-red-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()} className="btn-primary">Retry</Button>
+          </div>
+        </div>
+        <BottomNav cartItemCount={0} />
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -202,10 +223,8 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-cream-50 pb-16">
       <Header cartItemCount={cartItems.length} />
-      
       <div className="px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Your Cart ({cartItems.length} items)</h1>
-        
         <div className="space-y-4 mb-6">
           {cartItems.map((item) => (
             <div key={item.sku} className="bg-white rounded-lg p-4 shadow-sm">
@@ -213,13 +232,12 @@ const Cart = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900">{item.product.name}</h3>
                   <p className="text-sm text-gray-500">SKU: {item.sku}</p>
-                  <p className="text-sm text-gray-700">₹{item.product.price_per_kg}/kg</p>
+                  <p className="text-sm text-gray-700">₹{item.product.pricePerKg} / {item.product.unitType}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg">₹{item.total.toFixed(2)}</p>
                 </div>
               </div>
-              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Input
@@ -232,7 +250,6 @@ const Cart = () => {
                   />
                   <span className="text-gray-600">kg</span>
                 </div>
-                
                 <Button
                   onClick={() => removeItem(item.sku)}
                   variant="outline"
@@ -245,11 +262,9 @@ const Cart = () => {
             </div>
           ))}
         </div>
-
         {/* Order Summary */}
         <div className="bg-white rounded-lg p-4 shadow-sm mb-6">
           <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
-          
           <div className="space-y-2 mb-4">
             <div className="flex justify-between">
               <span>Items ({cartItems.length})</span>
@@ -266,7 +281,6 @@ const Cart = () => {
               </div>
             </div>
           </div>
-          
           <Button 
             onClick={handleProceedToPayment}
             disabled={isLoading}
@@ -276,7 +290,6 @@ const Cart = () => {
           </Button>
         </div>
       </div>
-      
       <BottomNav cartItemCount={cartItems.length} />
     </div>
   );
