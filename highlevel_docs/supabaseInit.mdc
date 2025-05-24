@@ -1,0 +1,12 @@
+---
+description: When performing any supabase operation for the database
+globs: 
+alwaysApply: false
+---
+## Supabase Client Setup
+
+- The project uses Supabase for backend services.
+- The Supabase client is initialized in `src/lib/supabaseClient.ts` using the `@supabase/supabase-js` package.
+- The client uses environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for configuration.
+- These variables should be set in a `.env.local` file at the project root (e.g., `narayanji-gajak-b2b/.env.local`).
+- Import and use the exported `supabase` client throughout the frontend codebase as needed. 
