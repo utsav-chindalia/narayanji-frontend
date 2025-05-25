@@ -49,21 +49,25 @@ const Catalog = () => {
       else setLoadingMore(true);
       setError(null);
       try {
-        const response = await apiFetch(`/api/catalog?page=${page}&pageSize=${PAGE_SIZE}`);
+        // Build API URL with search if present
+        let apiUrl = `/api/catalog?page=${page}&pageSize=${PAGE_SIZE}`;
+        if (searchTerm) {
+          apiUrl += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        const response = await apiFetch(apiUrl);
         if (!response.ok) throw new Error('Failed to fetch products');
         const data = await response.json();
-        if (Array.isArray(data)) {
-          setProducts(prev => page === 1 ? data : [...prev, ...data]);
-          setTotalProducts(null);
-        } else if (data.products && Array.isArray(data.products)) {
+        if (data.products && Array.isArray(data.products)) {
           setProducts(prev => page === 1 ? data.products : [...prev, ...data.products]);
-          setTotalProducts(data.total || null);
+          setTotalProducts(typeof data.total === 'number' ? data.total : null);
         } else {
           if (page === 1) setProducts([]);
+          setTotalProducts(0);
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');
         if (page === 1) setProducts([]);
+        setTotalProducts(0);
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -71,7 +75,13 @@ const Catalog = () => {
     };
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, searchTerm]);
+
+  // Reset pagination when searchTerm or selectedCategory changes
+  useEffect(() => {
+    setPage(1);
+    setTotalProducts(null);
+  }, [searchTerm, selectedCategory]);
 
   // Load cart and distributor name from localStorage
   useEffect(() => {
