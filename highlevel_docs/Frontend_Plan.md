@@ -141,8 +141,28 @@ Response: [
 ]
 - Pagination use GET http://localhost:3000/api/catalog?page=2&pageSize=2
 
+4- 
 
 
 
-
-   
+/api/orders/ORD-<id>/items sample response [
+  {
+    "sku": "SKU1",
+    "quantity_kg": 3,
+    "approved_quantity_kg": 1,
+    "product_name": "GAJAK GUD",
+    "pricing_tier": "TIER_1",
+    "price_per_kg": 480,
+    "gst": 5,
+    "product_category": "GAJAK"
+  },
+  {
+    "sku": "SKU3",
+    "quantity_kg": 2,
+    "approved_quantity_kg": 0,
+    "product_name": "GAJAK CHINI",
+    "pricing_tier": "TIER_1",
+    "price_per_kg": 480,
+    "gst": 5,
+    "product_category": "GAJAK"
+  },
