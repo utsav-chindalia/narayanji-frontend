@@ -5,5 +5,9 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  return fetch(input, { ...init, headers });
+  let url = input as string;
+  if (url.startsWith('/api')) {
+    url = import.meta.env.VITE_API_BASE_URL + url;
+  }
+  return fetch(url, { ...init, headers });
 } 
